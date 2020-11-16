@@ -90,7 +90,7 @@ export class BlogAccess {
       },
       ExpressionAttributeNames: {
         '#name': 'name',
-        '#dueDate': 'dueDate',
+        '#updatedAt': 'updatedAt',
         '#content': 'content'
       }
     }).promise()
@@ -105,26 +105,12 @@ export class BlogAccess {
     await this.docClient.delete({
       TableName: this.blogsTable,
       Key: {
+        userId,
         blogId
       }
     }).promise()
 
     return userId
-  }
-
-  async updateUploadUrl(blogId: string, attachmentUrl: string) {
-    logger.info(`Updating attachment URL for blog ${blogId} in ${this.blogsTable}`)
-
-    await this.docClient.update({
-      TableName: this.blogsTable,
-      Key: {
-        blogId
-      },
-      UpdateExpression: 'set attachmentUrl = :attachmentUrl',
-      ExpressionAttributeValues: {
-        ':attachmentUrl': attachmentUrl
-      }
-    }).promise()
   }
 
   async generateUploadUrl (blogId: string): Promise<string> {

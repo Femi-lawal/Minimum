@@ -56,26 +56,23 @@ custom:
         schema:
           required:
             - name
-            - dueDate
+            - content
           properties:
             name:
               type: string
-            dueDate:
+            content:
               type: string
       - name: UpdateBlogRequest
         contentType: application/json
         schema:
           required:
             - name
-            - dueDate
-            - done
+            - content
           properties:
             name:
               type: string
-            dueDate:
+            content:
               type: string
-            done:
-              type: boolean
 
 #FUNCTIONS
 functions:
