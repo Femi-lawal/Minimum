@@ -52,6 +52,9 @@ export class Blogs extends React.PureComponent<BlogsProps, BlogsState> {
   }
 
   onBlogCreate = async (event: React.ChangeEvent<HTMLButtonElement>) => {
+    if ( this.state.newBlogName.length < 1 || this.state.newBlogContent.length < 1){
+      return alert(`Ensure both fields are filled`)
+    }
     try {
       const dueDate = this.calculateDueDate()
       const newBlog = await createBlog(this.props.auth.getIdToken(), {
