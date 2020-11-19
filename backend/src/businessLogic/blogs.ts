@@ -21,10 +21,10 @@ export async function getblog (blogId: string, jwtToken: string): Promise<BlogIt
   return blogAccess.getblog(blogId, userId)
 }
 
-export function createblog (CreateBlogRequest: CreateBlogRequest, jwtToken: string): Promise<BlogItem> {
+export function createBlog (CreateBlogRequest: CreateBlogRequest, jwtToken: string): Promise<BlogItem> {
   const userId = parseUserId(jwtToken)
   const id = uuid.v4()
-  return blogAccess.createblog({
+  return blogAccess.createBlog({
     userId: userId,
     blogId: id,
     createdAt: new Date().toISOString(),

@@ -145,7 +145,7 @@ functions:
            
 
 
-  CreateBlog:
+  createBlog:
     handler: src/lambda/http/createBlog.handler
     events:
       - http:

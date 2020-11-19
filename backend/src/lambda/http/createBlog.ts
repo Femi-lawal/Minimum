@@ -3,10 +3,10 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import { CreateBlogRequest } from '../../requests/CreateBlogRequest'
 import * as middy from 'middy'
 import {cors} from 'middy/middlewares'
-import { createblog } from '../../businessLogic/blogs'
+import { createBlog } from '../../businessLogic/blogs'
 import { createLogger } from '../../utils/logger'
 
-const logger = createLogger('createblog')
+const logger = createLogger('createBlog')
 
 export const handler = middy( async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     // blog: Implement creating a new blog item
@@ -15,8 +15,8 @@ export const handler = middy( async (event: APIGatewayProxyEvent): Promise<APIGa
     const split = authorization.split(' ')
     const jwtToken = split[1]
 
-    const newblog: CreateBlogRequest = JSON.parse(event.body)
-    const blogItem = await createblog(newblog, jwtToken)
+    const newBlog: CreateBlogRequest = JSON.parse(event.body)
+    const blogItem = await createBlog(newBlog, jwtToken)
 
     return {
       statusCode: 201,

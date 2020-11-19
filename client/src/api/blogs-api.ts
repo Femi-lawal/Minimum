@@ -1,11 +1,11 @@
 import { apiEndpoint } from '../config'
-import { blog } from '../types/blog';
+import { Blog } from '../types/Blog';
 import { CreateBlogRequest } from '../types/CreateBlogRequest';
 import Axios from 'axios'
 import { UpdateBlogRequest } from '../types/UpdateBlogRequest';
 
-export async function getblogs(idToken: string): Promise<blog[]> {
-  console.log('Fetching blogs')
+export async function getBlogs(idToken: string): Promise<Blog[]> {
+  console.log('Fetching Blogs')
 
   const response = await Axios.get(`${apiEndpoint}/blogs`, {
     headers: {
@@ -17,11 +17,11 @@ export async function getblogs(idToken: string): Promise<blog[]> {
   return response.data.items
 }
 
-export async function createblog(
+export async function createBlog(
   idToken: string,
-  newblog: CreateBlogRequest
-): Promise<blog> {
-  const response = await Axios.post(`${apiEndpoint}/blogs`,  JSON.stringify(newblog), {
+  newBlog: CreateBlogRequest
+): Promise<Blog> {
+  const response = await Axios.post(`${apiEndpoint}/blogs`,  JSON.stringify(newBlog), {
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${idToken}`
@@ -30,7 +30,7 @@ export async function createblog(
   return response.data.item
 }
 
-export async function patchblog(
+export async function patchBlog(
   idToken: string,
   blogId: string,
   updatedblog: UpdateBlogRequest
@@ -43,7 +43,7 @@ export async function patchblog(
   })
 }
 
-export async function deleteblog(
+export async function deleteBlog(
   idToken: string,
   blogId: string
 ): Promise<void> {

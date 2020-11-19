@@ -1,11 +1,15 @@
 import React from 'react'
-import { Dimmer, Loader } from 'semantic-ui-react'
+import { Dimmer, Loader, Image, Segment } from 'semantic-ui-react'
 
 function Callback() {
   return (
+    <Segment>
     <Dimmer active>
-      <Loader content="Loading" />
+      <Loader content="Prepare to be underwhelmed"/>
     </Dimmer>
+
+    <Image src='https://react.semantic-ui.com/images/wireframe/short-paragraph.png' />
+  </Segment>
   )
 }
 

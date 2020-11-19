@@ -4,97 +4,87 @@ import update from 'immutability-helper'
 import * as React from 'react'
 import {
   Button,
-  Checkbox,
   Divider,
   Grid,
   Header,
   Icon,
   Input,
   Image,
-  Loader
+  Loader,
+  Segment,
+  Dimmer
 } from 'semantic-ui-react'
 
-import { createblog, deleteblog, getblogs, patchblog } from '../api/blogs-api'
+import { createBlog, deleteBlog, getBlogs, patchBlog } from '../api/blogs-api'
 import Auth from '../auth/Auth'
-import { blog } from '../types/blog'
+import { Blog } from '../types/Blog'
 
-interface blogsProps {
+interface BlogsProps {
   auth: Auth
   history: History
 }
 
-interface blogsState {
-  blogs: blog[]
-  newblogName: string
-  loadingblogs: boolean
+interface BlogsState {
+  blogs: Blog[]
+  newBlogName: string
+  newBlogContent: string
+  loadingBlogs: boolean
 }
 
-export class blogs extends React.PureComponent<blogsProps, blogsState> {
-  state: blogsState = {
+export class Blogs extends React.PureComponent<BlogsProps, BlogsState> {
+  state: BlogsState = {
     blogs: [],
-    newblogName: '',
-    loadingblogs: true
+    newBlogName: '',
+    newBlogContent: '',
+    loadingBlogs: true
   }
 
   handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    this.setState({ newblogName: event.target.value })
+    this.setState({ newBlogName: event.target.value })
   }
+
+  handleContentChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    this.setState({ newBlogContent: event.target.value })
+  }  
 
   onEditButtonClick = (blogId: string) => {
     this.props.history.push(`/blogs/${blogId}/edit`)
   }
 
-  onblogCreate = async (event: React.ChangeEvent<HTMLButtonElement>) => {
+  onBlogCreate = async (event: React.ChangeEvent<HTMLButtonElement>) => {
     try {
       const dueDate = this.calculateDueDate()
-      const newblog = await createblog(this.props.auth.getIdToken(), {
-        name: this.state.newblogName,
-        dueDate
+      const newBlog = await createBlog(this.props.auth.getIdToken(), {
+        name: this.state.newBlogName,
+        content: this.state.newBlogContent
       })
       this.setState({
-        blogs: [...this.state.blogs, newblog],
-        newblogName: ''
+        blogs: [...this.state.blogs, newBlog],
+        newBlogName: '',
+        newBlogContent: ''
       })
     } catch {
-      alert('blog creation failed')
+      alert('Blog creation failed')
     }
   }
 
-  onblogDelete = async (blogId: string) => {
+  onBlogDelete = async (blogId: string) => {
     try {
-      await deleteblog(this.props.auth.getIdToken(), blogId)
+      await deleteBlog(this.props.auth.getIdToken(), blogId)
       this.setState({
         blogs: this.state.blogs.filter(blog => blog.blogId != blogId)
       })
     } catch {
-      alert('blog deletion failed')
-    }
-  }
-
-  onblogCheck = async (pos: number) => {
-    try {
-      const blog = this.state.blogs[pos]
-      await patchblog(this.props.auth.getIdToken(), blog.blogId, {
-        name: blog.name,
-        dueDate: blog.dueDate,
-        done: !blog.done
-      })
-      this.setState({
-        blogs: update(this.state.blogs, {
-          [pos]: { done: { $set: !blog.done } }
-        })
-      })
-    } catch {
-      alert('blog deletion failed')
+      alert('Blog deletion failed')
     }
   }
 
   async componentDidMount() {
     try {
-      const blogs = await getblogs(this.props.auth.getIdToken())
+      const blogs = await getBlogs(this.props.auth.getIdToken())
       this.setState({
         blogs,
-        loadingblogs: false
+        loadingBlogs: false
       })
     } catch (e) {
       alert(`Failed to fetch blogs: ${e.message}`)
@@ -104,31 +94,44 @@ export class blogs extends React.PureComponent<blogsProps, blogsState> {
   render() {
     return (
       <div>
-        <Header as="h1">blogs</Header>
+        <Header as="h1">Blogs</Header>
 
-        {this.renderCreateblogInput()}
+        {this.rendercreateBlogInput()}
 
         {this.renderblogs()}
       </div>
     )
   }
 
-  renderCreateblogInput() {
+  rendercreateBlogInput() {
     return (
       <Grid.Row>
+        <Grid.Column width={5}>
+          <Input
+            label = 'Title'
+            color = 'teal'
+            fluid
+            actionPosition="left"
+            placeholder="Awesome title"
+            onChange={this.handleNameChange}
+          />
+        </Grid.Column>
+        <Grid.Column width={5}>
+          <Divider />
+        </Grid.Column>
         <Grid.Column width={16}>
           <Input
             action={{
               color: 'teal',
               labelPosition: 'left',
               icon: 'add',
-              content: 'New task',
-              onClick: this.onblogCreate
+              content: 'New Content',
+              onClick: this.onBlogCreate
             }}
             fluid
             actionPosition="left"
-            placeholder="To change the world..."
-            onChange={this.handleNameChange}
+            placeholder="To infinity and beyond..."
+            onChange={this.handleContentChange}
           />
         </Grid.Column>
         <Grid.Column width={16}>
@@ -139,7 +142,7 @@ export class blogs extends React.PureComponent<blogsProps, blogsState> {
   }
 
   renderblogs() {
-    if (this.state.loadingblogs) {
+    if (this.state.loadingBlogs) {
       return this.renderLoading()
     }
 
@@ -149,9 +152,12 @@ export class blogs extends React.PureComponent<blogsProps, blogsState> {
   renderLoading() {
     return (
       <Grid.Row>
-        <Loader indeterminate active inline="centered">
-          Loading blogs
-        </Loader>
+        <Segment>
+          <Dimmer active>
+            <Loader content="Prepare to be underwhelmed"/>
+          </Dimmer>
+          <Image src='https://react.semantic-ui.com/images/wireframe/short-paragraph.png' />
+        </Segment>
       </Grid.Row>
     )
   }
@@ -162,17 +168,14 @@ export class blogs extends React.PureComponent<blogsProps, blogsState> {
         {this.state.blogs.map((blog, pos) => {
           return (
             <Grid.Row key={blog.blogId}>
-              <Grid.Column width={1} verticalAlign="middle">
-                <Checkbox
-                  onChange={() => this.onblogCheck(pos)}
-                  checked={blog.done}
-                />
-              </Grid.Column>
               <Grid.Column width={10} verticalAlign="middle">
                 {blog.name}
               </Grid.Column>
+              <Grid.Column width={10} verticalAlign="middle">
+                {blog.content}
+              </Grid.Column>
               <Grid.Column width={3} floated="right">
-                {blog.dueDate}
+                {blog.createdAt}
               </Grid.Column>
               <Grid.Column width={1} floated="right">
                 <Button
@@ -187,7 +190,7 @@ export class blogs extends React.PureComponent<blogsProps, blogsState> {
                 <Button
                   icon
                   color="red"
-                  onClick={() => this.onblogDelete(blog.blogId)}
+                  onClick={() => this.onBlogDelete(blog.blogId)}
                 >
                   <Icon name="delete" />
                 </Button>
