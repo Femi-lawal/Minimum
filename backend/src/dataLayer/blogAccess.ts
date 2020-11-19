@@ -20,11 +20,6 @@ export class BlogAccess {
     private readonly userIndex = process.env.USER_ID_INDEX
   ) {}
 
-  // async blogExists(blogId: string): Promise<boolean> {
-  //   const item = await this.getblog(blogId)
-  //   return !!item
-  // }
-
   async getAllblogs(userId: string): Promise<BlogItem[]> {
     logger.info(`Getting all blogs for user ${userId} from ${this.blogsTable}`)
 
@@ -60,7 +55,7 @@ export class BlogAccess {
     return item as BlogItem
   }
 
-  async createblog(BlogItem: BlogItem) {
+  async createBlog(BlogItem: BlogItem) {
     logger.info(`Putting blog ${BlogItem.blogId} into ${this.blogsTable}`)
 
     await this.docClient.put({

@@ -9,7 +9,7 @@ enum UploadState {
   UploadingFile,
 }
 
-interface EditblogProps {
+interface EditBlogProps {
   match: {
     params: {
       blogId: string
@@ -18,16 +18,16 @@ interface EditblogProps {
   auth: Auth
 }
 
-interface EditblogState {
+interface EditBlogState {
   file: any
   uploadState: UploadState
 }
 
-export class Editblog extends React.PureComponent<
-  EditblogProps,
-  EditblogState
+export class EditBlog extends React.PureComponent<
+  EditBlogProps,
+  EditBlogState
 > {
-  state: EditblogState = {
+  state: EditBlogState = {
     file: undefined,
     uploadState: UploadState.NoUpload
   }

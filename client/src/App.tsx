@@ -1,12 +1,12 @@
 import React, { Component } from 'react'
 import { Link, Route, Router, Switch } from 'react-router-dom'
-import { Grid, Menu, Segment } from 'semantic-ui-react'
+import { Grid, Menu, Segment, Image} from 'semantic-ui-react'
 
 import Auth from './auth/Auth'
-import { Editblog } from './components/Editblog'
+import { EditBlog } from './components/EditBlog'
 import { LogIn } from './components/LogIn'
 import { NotFound } from './components/NotFound'
-import { blogs } from './components/blogs'
+import { Blogs } from './components/Blogs'
 
 export interface AppProps {}
 
@@ -42,7 +42,6 @@ export default class App extends Component<AppProps, AppState> {
               <Grid.Column width={16}>
                 <Router history={this.props.history}>
                   {this.generateMenu()}
-
                   {this.generateCurrentPage()}
                 </Router>
               </Grid.Column>
@@ -54,15 +53,25 @@ export default class App extends Component<AppProps, AppState> {
   }
 
   generateMenu() {
-    return (
-      <Menu>
-        <Menu.Item name="home">
-          <Link to="/">Home</Link>
-        </Menu.Item>
+    if (this.props.auth.isAuthenticated()) {
+      return (
+        <Menu>
+          <Menu.Item name="home">
+            <Link to="/">
+              <Image src='logo_size.jpg' size='mini'/>
+              Home
+            </Link>
+          </Menu.Item>
 
-        <Menu.Menu position="right">{this.logInLogOutButton()}</Menu.Menu>
-      </Menu>
-    )
+          <Menu.Menu position="right">{this.logInLogOutButton()}</Menu.Menu>
+        </Menu>
+      )
+    }
+    else {
+      return (
+        <Image src='logo_main.png' size='medium' centered/>
+      )
+    }
   }
 
   logInLogOutButton() {
@@ -92,7 +101,7 @@ export default class App extends Component<AppProps, AppState> {
           path="/"
           exact
           render={props => {
-            return <blogs {...props} auth={this.props.auth} />
+            return <Blogs {...props} auth={this.props.auth} />
           }}
         />
 
@@ -100,7 +109,7 @@ export default class App extends Component<AppProps, AppState> {
           path="/blogs/:blogId/edit"
           exact
           render={props => {
-            return <Editblog {...props} auth={this.props.auth} />
+            return <EditBlog {...props} auth={this.props.auth} />
           }}
         />
 
