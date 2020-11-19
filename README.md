@@ -11,3 +11,12 @@ npm install
 npm start
 ```
 navigate to localhost:3000
+
+# backend setup
+By the time you're reading this I would have already closed the API, so you'll have to set up the backend with Severless
+```
+cd backend
+npm i
+sls deploy
+```
+Then replace the api id in the config.ts file in the client side code
