@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"net/http"
-	"net/http/httputil"
-	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
@@ -12,15 +10,19 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"project/pkg/common"
 	"project/pkg/middleware"
+	pb "project/pkg/proto"
 )
 
 type Service struct {
-	config *common.Config
-	logger *zap.Logger
-	router *gin.Engine
+	config     *common.Config
+	logger     *zap.Logger
+	router     *gin.Engine
+	authClient pb.AuthServiceClient
 }
 
 func main() {
@@ -28,10 +30,20 @@ func main() {
 	config := common.LoadConfig()
 	logger := common.NewLogger(config.Environment)
 
+	// Connect to Auth Service via gRPC
+	authServiceURL := getEnv("AUTH_SERVICE_URL", "localhost:8081")
+	conn, err := grpc.Dial(authServiceURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		logger.Fatal("did not connect to auth service", zap.Error(err))
+	}
+	defer conn.Close()
+	authClient := pb.NewAuthServiceClient(conn)
+
 	// Create service
 	svc := &Service{
-		config: config,
-		logger: logger,
+		config:     config,
+		logger:     logger,
+		authClient: authClient,
 	}
 
 	// Setup router
@@ -53,12 +65,12 @@ func (s *Service) setupRouter() {
 	// Health check
 	r.GET("/health", s.healthCheck)
 
-	// Proxy routes
-	// In a real scenario, these URLs would come from config/env
-	authServiceURL := getEnv("AUTH_SERVICE_URL", "http://localhost:8081")
-	
-	// Auth routes
-	r.Any("/api/v1/auth/*path", s.proxyHandler(authServiceURL))
+	// API routes
+	api := r.Group("/api/v1/auth")
+	{
+		api.POST("/login", s.login)
+		api.POST("/register", s.register)
+	}
 
 	s.router = r
 }
@@ -71,26 +83,58 @@ func (s *Service) healthCheck(c *gin.Context) {
 	})
 }
 
-func (s *Service) proxyHandler(target string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		remote, err := url.Parse(target)
-		if err != nil {
-			s.logger.Error("failed to parse target url", zap.Error(err))
-			c.AbortWithStatus(http.StatusInternalServerError)
-			return
-		}
-
-		proxy := httputil.NewSingleHostReverseProxy(remote)
-		proxy.Director = func(req *http.Request) {
-			req.Header = c.Request.Header
-			req.Host = remote.Host
-			req.URL.Scheme = remote.Scheme
-			req.URL.Host = remote.Host
-			// req.URL.Path is already correct because we are forwarding everything
-		}
-
-		proxy.ServeHTTP(c.Writer, c.Request)
+func (s *Service) login(c *gin.Context) {
+	var req struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
 	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.RespondError(c, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
+		return
+	}
+
+	// Call gRPC service
+	resp, err := s.authClient.Login(context.Background(), &pb.LoginRequest{
+		Email:    req.Email,
+		Password: req.Password,
+	})
+	if err != nil {
+		s.logger.Error("grpc login failed", zap.Error(err))
+		common.RespondError(c, http.StatusUnauthorized, "AUTH_FAILED", "Invalid credentials")
+		return
+	}
+
+	common.RespondSuccess(c, gin.H{
+		"token": resp.Token,
+		"user":  resp.User,
+	})
+}
+
+func (s *Service) register(c *gin.Context) {
+	var req struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.RespondError(c, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
+		return
+	}
+
+	// Call gRPC service
+	resp, err := s.authClient.Register(context.Background(), &pb.RegisterRequest{
+		Email:    req.Email,
+		Password: req.Password,
+	})
+	if err != nil {
+		s.logger.Error("grpc register failed", zap.Error(err))
+		common.RespondError(c, http.StatusInternalServerError, "INTERNAL_ERROR", "Registration failed")
+		return
+	}
+
+	common.RespondCreated(c, gin.H{
+		"id":    resp.Id,
+		"email": resp.Email,
+	})
 }
 
 func (s *Service) startServer() {

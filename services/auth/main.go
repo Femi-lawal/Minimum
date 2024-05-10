@@ -2,23 +2,24 @@ package main
 
 import (
 	"context"
-	"net/http"
+	"fmt"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
-	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 
 	"project/pkg/common"
-	"project/pkg/middleware"
+	pb "project/pkg/proto"
 )
 
 type Service struct {
+	pb.UnimplementedAuthServiceServer
 	config *common.Config
 	logger *zap.Logger
-	router *gin.Engine
 }
 
 func main() {
@@ -32,67 +33,26 @@ func main() {
 		logger: logger,
 	}
 
-	// Setup router
-	svc.setupRouter()
-
-	// Start server with graceful shutdown
-	svc.startServer()
+	// Start gRPC server
+	svc.startGRPCServer()
 }
 
-func (s *Service) setupRouter() {
-	gin.SetMode(gin.ReleaseMode)
-	r := gin.New()
-
-	// Middleware
-	r.Use(middleware.Logger(s.logger))
-	r.Use(middleware.Recovery(s.logger))
-	r.Use(middleware.CORS(s.config.AllowedOrigins))
-
-	// Health check
-	r.GET("/health", s.healthCheck)
-
-	// API routes
-	api := r.Group("/api/v1/auth")
-	{
-		api.POST("/login", s.login)
-		api.POST("/register", s.register)
+func (s *Service) startGRPCServer() {
+	lis, err := net.Listen("tcp", ":"+s.config.Port)
+	if err != nil {
+		s.logger.Fatal("failed to listen", zap.Error(err))
 	}
 
-	s.router = r
-}
+	grpcServer := grpc.NewServer()
+	pb.RegisterAuthServiceServer(grpcServer, s)
 
-func (s *Service) healthCheck(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"status":    "healthy",
-		"timestamp": time.Now().UTC(),
-		"service":   "auth-service",
-	})
-}
-
-// Mock handlers for now
-func (s *Service) login(c *gin.Context) {
-	// TODO: Implement actual login logic
-	common.RespondSuccess(c, gin.H{"token": "mock-jwt-token", "user": gin.H{"id": "1", "email": "test@example.com"}})
-}
-
-func (s *Service) register(c *gin.Context) {
-	// TODO: Implement actual register logic
-	common.RespondCreated(c, gin.H{"id": "1", "email": "test@example.com"})
-}
-
-func (s *Service) startServer() {
-	srv := &http.Server{
-		Addr:         ":" + s.config.Port,
-		Handler:      s.router,
-		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 15 * time.Second,
-		IdleTimeout:  60 * time.Second,
-	}
+	// Register reflection service on gRPC server.
+	reflection.Register(grpcServer)
 
 	go func() {
-		s.logger.Info("starting server", zap.String("port", s.config.Port))
-		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-			s.logger.Fatal("server error", zap.Error(err))
+		s.logger.Info("starting gRPC server", zap.String("port", s.config.Port))
+		if err := grpcServer.Serve(lis); err != nil {
+			s.logger.Fatal("failed to serve", zap.Error(err))
 		}
 	}()
 
@@ -101,10 +61,43 @@ func (s *Service) startServer() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
+	s.logger.Info("shutting down gRPC server")
+	grpcServer.GracefulStop()
+}
 
-	if err := srv.Shutdown(ctx); err != nil {
-		s.logger.Error("server shutdown error", zap.Error(err))
+// gRPC Handlers
+
+func (s *Service) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResponse, error) {
+	s.logger.Info("Login request", zap.String("email", req.Email))
+
+	// Mock logic
+	if req.Email == "test@example.com" && req.Password == "password" {
+		return &pb.LoginResponse{
+			Token: "mock-jwt-token",
+			User: &pb.User{
+				Id:    "1",
+				Email: req.Email,
+			},
+		}, nil
 	}
+
+	return nil, fmt.Errorf("invalid credentials")
+}
+
+func (s *Service) Register(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterResponse, error) {
+	s.logger.Info("Register request", zap.String("email", req.Email))
+
+	// Mock logic
+	return &pb.RegisterResponse{
+		Id:    "1",
+		Email: req.Email,
+	}, nil
+}
+
+func (s *Service) Validate(ctx context.Context, req *pb.ValidateRequest) (*pb.ValidateResponse, error) {
+	// Mock logic
+	return &pb.ValidateResponse{
+		Valid:  true,
+		UserId: "1",
+	}, nil
 }
