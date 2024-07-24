@@ -1,0 +1,1 @@
+const { chromium } = require('playwright'); (async () => { const browser = await chromium.launch({ headless: true, args: ['--remote-debugging-port=9222', '--no-sandbox', '--disable-dev-shm-usage'] }); console.log('Browser started on 9222'); await new Promise(() => {}); })();
