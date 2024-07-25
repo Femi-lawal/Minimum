@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	pb "project/pkg/proto"
+	pb "project/pkg/proto/auth"
 
 	"go.uber.org/zap"
 )

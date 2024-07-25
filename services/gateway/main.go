@@ -15,14 +15,16 @@ import (
 
 	"project/pkg/common"
 	"project/pkg/middleware"
-	pb "project/pkg/proto"
+	authpb "project/pkg/proto/auth"
+	blogpb "project/pkg/proto/blog"
 )
 
 type Service struct {
 	config     *common.Config
 	logger     *zap.Logger
 	router     *gin.Engine
-	authClient pb.AuthServiceClient
+	authClient authpb.AuthServiceClient
+	blogClient blogpb.BlogServiceClient
 }
 
 func main() {
@@ -32,18 +34,28 @@ func main() {
 
 	// Connect to Auth Service via gRPC
 	authServiceURL := getEnv("AUTH_SERVICE_URL", "localhost:8081")
-	conn, err := grpc.Dial(authServiceURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	authConn, err := grpc.Dial(authServiceURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		logger.Fatal("did not connect to auth service", zap.Error(err))
 	}
-	defer conn.Close()
-	authClient := pb.NewAuthServiceClient(conn)
+	defer authConn.Close()
+	authClient := authpb.NewAuthServiceClient(authConn)
+
+	// Connect to Blog Service via gRPC
+	blogServiceURL := getEnv("BLOG_SERVICE_URL", "localhost:8082")
+	blogConn, err := grpc.Dial(blogServiceURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		logger.Fatal("did not connect to blog service", zap.Error(err))
+	}
+	defer blogConn.Close()
+	blogClient := blogpb.NewBlogServiceClient(blogConn)
 
 	// Create service
 	svc := &Service{
 		config:     config,
 		logger:     logger,
 		authClient: authClient,
+		blogClient: blogClient,
 	}
 
 	// Setup router
@@ -66,13 +78,71 @@ func (s *Service) setupRouter() {
 	r.GET("/health", s.healthCheck)
 
 	// API routes
-	api := r.Group("/api/v1/auth")
+	api := r.Group("/api/v1")
 	{
-		api.POST("/login", s.login)
-		api.POST("/register", s.register)
+		auth := api.Group("/auth")
+		{
+			auth.POST("/login", s.login)
+			auth.POST("/register", s.register)
+		}
+
+		posts := api.Group("/posts")
+		{
+			posts.GET("", s.listPosts)
+			posts.POST("", s.createPost)
+		}
+
+		users := api.Group("/users")
+		{
+			users.GET("/:id", s.getUser)
+		}
 	}
 
 	s.router = r
+}
+
+func (s *Service) listPosts(c *gin.Context) {
+	tag := c.Query("tag")
+	
+	resp, err := s.blogClient.ListPosts(context.Background(), &blogpb.ListPostsRequest{
+		Page:  1,
+		Limit: 10,
+		Tag:   tag,
+	})
+	if err != nil {
+		s.logger.Error("grpc list posts failed", zap.Error(err))
+		common.RespondError(c, http.StatusInternalServerError, "INTERNAL_ERROR", "Failed to fetch posts")
+		return
+	}
+
+	common.RespondSuccess(c, resp.Posts)
+}
+
+func (s *Service) createPost(c *gin.Context) {
+	var req struct {
+		Title   string `json:"title"`
+		Content string `json:"content"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.RespondError(c, http.StatusBadRequest, "INVALID_REQUEST", err.Error())
+		return
+	}
+
+	// TODO: Get author ID from token
+	authorId := "00000000-0000-0000-0000-000000000001"
+
+	resp, err := s.blogClient.CreatePost(context.Background(), &blogpb.CreatePostRequest{
+		Title:    req.Title,
+		Content:  req.Content,
+		AuthorId: authorId,
+	})
+	if err != nil {
+		s.logger.Error("grpc create post failed", zap.Error(err))
+		common.RespondError(c, http.StatusInternalServerError, "INTERNAL_ERROR", "Failed to create post")
+		return
+	}
+
+	common.RespondCreated(c, resp.Post)
 }
 
 func (s *Service) healthCheck(c *gin.Context) {
@@ -94,7 +164,7 @@ func (s *Service) login(c *gin.Context) {
 	}
 
 	// Call gRPC service
-	resp, err := s.authClient.Login(context.Background(), &pb.LoginRequest{
+	resp, err := s.authClient.Login(context.Background(), &authpb.LoginRequest{
 		Email:    req.Email,
 		Password: req.Password,
 	})
@@ -121,7 +191,7 @@ func (s *Service) register(c *gin.Context) {
 	}
 
 	// Call gRPC service
-	resp, err := s.authClient.Register(context.Background(), &pb.RegisterRequest{
+	resp, err := s.authClient.Register(context.Background(), &authpb.RegisterRequest{
 		Email:    req.Email,
 		Password: req.Password,
 	})
@@ -135,6 +205,22 @@ func (s *Service) register(c *gin.Context) {
 		"id":    resp.Id,
 		"email": resp.Email,
 	})
+}
+
+func (s *Service) getUser(c *gin.Context) {
+	userId := c.Param("id")
+
+	// Call Blog Service (where users are stored/managed alongside posts in this architecture)
+	resp, err := s.blogClient.GetUser(context.Background(), &blogpb.GetUserRequest{
+		Id: userId,
+	})
+	if err != nil {
+		s.logger.Error("grpc get user failed", zap.Error(err))
+		common.RespondError(c, http.StatusNotFound, "NOT_FOUND", "User not found")
+		return
+	}
+
+	common.RespondSuccess(c, resp.User)
 }
 
 func (s *Service) startServer() {

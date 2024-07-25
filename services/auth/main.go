@@ -13,7 +13,7 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"project/pkg/common"
-	pb "project/pkg/proto"
+	pb "project/pkg/proto/auth"
 )
 
 type Service struct {

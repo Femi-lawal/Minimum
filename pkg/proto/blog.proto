@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package blog;
+
+option go_package = "project/pkg/proto/blog";
+
+service BlogService {
+  rpc ListPosts (ListPostsRequest) returns (ListPostsResponse) {}
+  rpc CreatePost (CreatePostRequest) returns (CreatePostResponse) {}
+  rpc GetUser (GetUserRequest) returns (GetUserResponse) {}
+}
+
+message Post {
+  string id = 1;
+  string title = 2;
+  string content = 3;
+  string author_id = 4;
+  string created_at = 5;
+  Author author = 6;
+}
+
+message Author {
+  string id = 1;
+  string name = 2;
+  string avatar_url = 3;
+}
+
+message User {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  string bio = 4;
+  string avatar_url = 5;
+  int32 followers = 6;
+  int32 following = 7;
+}
+
+message ListPostsRequest {
+  int32 page = 1;
+  int32 limit = 2;
+  string tag = 3;
+}
+
+message ListPostsResponse {
+  repeated Post posts = 1;
+  int32 total = 2;
+}
+
+message CreatePostRequest {
+  string title = 1;
+  string content = 2;
+  string author_id = 3;
+}
+
+message CreatePostResponse {
+  Post post = 1;
+}
+
+message GetUserRequest {
+  string id = 1;
+}
+
+message GetUserResponse {
+  User user = 1;
+}

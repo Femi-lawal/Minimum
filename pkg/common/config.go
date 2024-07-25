@@ -36,7 +36,7 @@ func LoadConfig() *Config {
 			DBName:   getEnv("DB_NAME", "postgres"),
 			SSLMode:  getEnv("DB_SSLMODE", "disable"),
 		},
-		AllowedOrigins: []string{"*"}, // TODO: Make configurable
+		AllowedOrigins: []string{getEnv("ALLOWED_ORIGINS", "http://localhost:3000")},
 		OTELEndpoint:   getEnv("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
 	}
 }
