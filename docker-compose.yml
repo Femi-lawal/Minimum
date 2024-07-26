@@ -10,7 +10,8 @@ services:
       - "8080:8080"
     environment:
       - PORT=8080
-      - AUTH_SERVICE_URL=http://auth:8081
+      - AUTH_SERVICE_URL=auth:8081
+      - BLOG_SERVICE_URL=blog:8082
       - ENVIRONMENT=development
     depends_on:
       - auth
@@ -30,6 +31,21 @@ services:
       - DB_USER=postgres
       - DB_PASSWORD=postgres
       - DB_NAME=auth_db
+    depends_on:
+      - postgres
+    networks:
+      - app-network
+
+  blog:
+    build:
+      context: .
+      dockerfile: services/blog/Dockerfile
+    ports:
+      - "8082:8082"
+    environment:
+      - PORT=8082
+      - ENVIRONMENT=development
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/blog_app?sslmode=disable
     depends_on:
       - postgres
     networks:

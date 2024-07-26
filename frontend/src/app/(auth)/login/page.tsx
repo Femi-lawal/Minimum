@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -11,20 +11,49 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
+    const [searchParams, setSearchParams] = useState<URLSearchParams | null>(null);
+
+    useEffect(() => {
+        setSearchParams(new URLSearchParams(window.location.search));
+    }, []);
+
+    useEffect(() => {
+        if (searchParams && searchParams.get('demo') === 'true') {
+            setEmail('test@example.com');
+            setPassword('password');
+            // Auto-submit for demo
+            // handleSubmit(new Event('submit') as any); 
+            // Better to let user click or just fill it
+        }
+    }, [searchParams]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError('');
 
         try {
-            // TODO: Implement actual login logic
-            // const res = await fetch('/api/auth/login', { ... });
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/v1/auth/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password }),
+            });
 
-            // Mock success
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            if (!res.ok) {
+                throw new Error('Invalid credentials');
+            }
+
+            const data = await res.json();
+            // Store token and user
+            localStorage.setItem('token', data.data.token);
+            localStorage.setItem('user', JSON.stringify(data.data.user));
+
             router.push('/dashboard');
-        } catch (err) {
-            setError('Invalid credentials');
+        } catch (err: any) {
+            console.error('Login error:', err);
+            setError(err.message || 'Invalid credentials');
         } finally {
             setLoading(false);
         }

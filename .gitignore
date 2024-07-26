@@ -1,1 +1,8 @@
-**/.DS_Store
+MODERNIZATION_PLAYBOOK.md
+node_modules
+.next
+out
+build
+dist
+.DS_Store
+*.log

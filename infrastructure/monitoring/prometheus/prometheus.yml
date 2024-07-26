@@ -13,3 +13,7 @@ scrape_configs:
   - job_name: 'auth'
     static_configs:
       - targets: ['auth:8081']
+
+  - job_name: 'blog'
+    static_configs:
+      - targets: ['blog:8082']
