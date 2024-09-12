@@ -77,21 +77,27 @@ func (s *Service) setupRouter() {
 	// Health check
 	r.GET("/health", s.healthCheck)
 
+	// Auth middleware for protected routes
+	authMiddleware := middleware.AuthMiddleware(s.authClient)
+
 	// API routes
 	api := r.Group("/api/v1")
 	{
+		// Public auth routes
 		auth := api.Group("/auth")
 		{
 			auth.POST("/login", s.login)
 			auth.POST("/register", s.register)
 		}
 
+		// Posts routes - GET is public, POST requires auth
 		posts := api.Group("/posts")
 		{
 			posts.GET("", s.listPosts)
-			posts.POST("", s.createPost)
+			posts.POST("", authMiddleware, s.createPost)
 		}
 
+		// User routes - public
 		users := api.Group("/users")
 		{
 			users.GET("/:id", s.getUser)
@@ -103,7 +109,7 @@ func (s *Service) setupRouter() {
 
 func (s *Service) listPosts(c *gin.Context) {
 	tag := c.Query("tag")
-	
+
 	resp, err := s.blogClient.ListPosts(context.Background(), &blogpb.ListPostsRequest{
 		Page:  1,
 		Limit: 10,
@@ -128,8 +134,12 @@ func (s *Service) createPost(c *gin.Context) {
 		return
 	}
 
-	// TODO: Get author ID from token
-	authorId := "00000000-0000-0000-0000-000000000001"
+	// Get author ID from authenticated user context
+	authorId := middleware.GetUserID(c)
+	if authorId == "" {
+		common.RespondError(c, http.StatusUnauthorized, "UNAUTHORIZED", "User not authenticated")
+		return
+	}
 
 	resp, err := s.blogClient.CreatePost(context.Background(), &blogpb.CreatePostRequest{
 		Title:    req.Title,
