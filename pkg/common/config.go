@@ -3,6 +3,7 @@ package common
 import (
 	"os"
 	"strconv"
+	"strings"
 )
 
 type Config struct {
@@ -36,7 +37,7 @@ func LoadConfig() *Config {
 			DBName:   getEnv("DB_NAME", "postgres"),
 			SSLMode:  getEnv("DB_SSLMODE", "disable"),
 		},
-		AllowedOrigins: []string{getEnv("ALLOWED_ORIGINS", "http://localhost:3000")},
+		AllowedOrigins: getEnvList("ALLOWED_ORIGINS", []string{"http://localhost:3000", "http://127.0.0.1:3000"}),
 		OTELEndpoint:   getEnv("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
 	}
 }
@@ -52,6 +53,24 @@ func getEnvInt(key string, fallback int) int {
 	if value, ok := os.LookupEnv(key); ok {
 		if i, err := strconv.Atoi(value); err == nil {
 			return i
+		}
+	}
+	return fallback
+}
+
+// getEnvList parses a comma-separated environment variable into a string slice
+func getEnvList(key string, fallback []string) []string {
+	if value, ok := os.LookupEnv(key); ok {
+		parts := strings.Split(value, ",")
+		var result []string
+		for _, p := range parts {
+			trimmed := strings.TrimSpace(p)
+			if trimmed != "" {
+				result = append(result, trimmed)
+			}
+		}
+		if len(result) > 0 {
+			return result
 		}
 	}
 	return fallback
