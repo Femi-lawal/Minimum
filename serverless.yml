@@ -1,0 +1,37 @@
+service: minimum-monolith
+
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: provided.al2
+  architecture: x86_64
+  region: us-east-1
+  memorySize: 256
+  timeout: 30
+  environment:
+    ENVIRONMENT: production
+    # DATABASE_URL: ${ssm:/minimum/prod/database_url} # Example: Use SSM in production
+    # JWT_SECRET: ${ssm:/minimum/prod/jwt_secret}
+    # These internal ports are effectively fixed for the monolith
+    AUTH_PORT: "8081"
+    BLOG_PORT: "8082"
+
+package:
+  patterns:
+    - "!./**"
+    - ./bootstrap
+
+functions:
+  api:
+    handler: bootstrap
+    events:
+      - http:
+          path: /
+          method: ANY
+      - http:
+          path: /{proxy+}
+          method: ANY
+
+plugins:
+  # - serverless-go-plugin # Optional: if you want SLS to build for you
