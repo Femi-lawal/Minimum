@@ -8,6 +8,7 @@ service AuthService {
   rpc Login (LoginRequest) returns (LoginResponse) {}
   rpc Register (RegisterRequest) returns (RegisterResponse) {}
   rpc Validate (ValidateRequest) returns (ValidateResponse) {}
+  rpc UpdateUser (UpdateUserRequest) returns (UpdateUserResponse) {}
 }
 
 message LoginRequest {
@@ -42,4 +43,18 @@ message ValidateResponse {
 message User {
   string id = 1;
   string email = 2;
+  string name = 3;
+  string bio = 4;
+  string avatar_url = 5;
+}
+
+message UpdateUserRequest {
+  string user_id = 1;
+  string name = 2;
+  string bio = 3;
+  string avatar_url = 4;
+}
+
+message UpdateUserResponse {
+  User user = 1;
 }
