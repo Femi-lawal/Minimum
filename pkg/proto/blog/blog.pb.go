@@ -28,6 +28,7 @@ type Post struct {
 	Content       string                 `protobuf:"bytes,3,opt,name=content,proto3" json:"content,omitempty"`
 	AuthorId      string                 `protobuf:"bytes,4,opt,name=author_id,json=authorId,proto3" json:"author_id,omitempty"`
 	CreatedAt     string                 `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	Author        *Author                `protobuf:"bytes,6,opt,name=author,proto3" json:"author,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -97,6 +98,73 @@ func (x *Post) GetCreatedAt() string {
 	return ""
 }
 
+func (x *Post) GetAuthor() *Author {
+	if x != nil {
+		return x.Author
+	}
+	return nil
+}
+
+type Author struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	AvatarUrl     string                 `protobuf:"bytes,3,opt,name=avatar_url,json=avatarUrl,proto3" json:"avatar_url,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Author) Reset() {
+	*x = Author{}
+	mi := &file_pkg_proto_blog_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Author) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Author) ProtoMessage() {}
+
+func (x *Author) ProtoReflect() protoreflect.Message {
+	mi := &file_pkg_proto_blog_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Author.ProtoReflect.Descriptor instead.
+func (*Author) Descriptor() ([]byte, []int) {
+	return file_pkg_proto_blog_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *Author) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *Author) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Author) GetAvatarUrl() string {
+	if x != nil {
+		return x.AvatarUrl
+	}
+	return ""
+}
+
 type User struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -112,7 +180,7 @@ type User struct {
 
 func (x *User) Reset() {
 	*x = User{}
-	mi := &file_pkg_proto_blog_proto_msgTypes[1]
+	mi := &file_pkg_proto_blog_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -124,7 +192,7 @@ func (x *User) String() string {
 func (*User) ProtoMessage() {}
 
 func (x *User) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_proto_blog_proto_msgTypes[1]
+	mi := &file_pkg_proto_blog_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -137,7 +205,7 @@ func (x *User) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use User.ProtoReflect.Descriptor instead.
 func (*User) Descriptor() ([]byte, []int) {
-	return file_pkg_proto_blog_proto_rawDescGZIP(), []int{1}
+	return file_pkg_proto_blog_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *User) GetId() string {
@@ -200,7 +268,7 @@ type ListPostsRequest struct {
 
 func (x *ListPostsRequest) Reset() {
 	*x = ListPostsRequest{}
-	mi := &file_pkg_proto_blog_proto_msgTypes[2]
+	mi := &file_pkg_proto_blog_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -212,7 +280,7 @@ func (x *ListPostsRequest) String() string {
 func (*ListPostsRequest) ProtoMessage() {}
 
 func (x *ListPostsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_proto_blog_proto_msgTypes[2]
+	mi := &file_pkg_proto_blog_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -225,7 +293,7 @@ func (x *ListPostsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPostsRequest.ProtoReflect.Descriptor instead.
 func (*ListPostsRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_proto_blog_proto_rawDescGZIP(), []int{2}
+	return file_pkg_proto_blog_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *ListPostsRequest) GetPage() int32 {
@@ -259,7 +327,7 @@ type ListPostsResponse struct {
 
 func (x *ListPostsResponse) Reset() {
 	*x = ListPostsResponse{}
-	mi := &file_pkg_proto_blog_proto_msgTypes[3]
+	mi := &file_pkg_proto_blog_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -271,7 +339,7 @@ func (x *ListPostsResponse) String() string {
 func (*ListPostsResponse) ProtoMessage() {}
 
 func (x *ListPostsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_proto_blog_proto_msgTypes[3]
+	mi := &file_pkg_proto_blog_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -284,7 +352,7 @@ func (x *ListPostsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPostsResponse.ProtoReflect.Descriptor instead.
 func (*ListPostsResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_proto_blog_proto_rawDescGZIP(), []int{3}
+	return file_pkg_proto_blog_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *ListPostsResponse) GetPosts() []*Post {
@@ -312,7 +380,7 @@ type CreatePostRequest struct {
 
 func (x *CreatePostRequest) Reset() {
 	*x = CreatePostRequest{}
-	mi := &file_pkg_proto_blog_proto_msgTypes[4]
+	mi := &file_pkg_proto_blog_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -324,7 +392,7 @@ func (x *CreatePostRequest) String() string {
 func (*CreatePostRequest) ProtoMessage() {}
 
 func (x *CreatePostRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_proto_blog_proto_msgTypes[4]
+	mi := &file_pkg_proto_blog_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -337,7 +405,7 @@ func (x *CreatePostRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreatePostRequest.ProtoReflect.Descriptor instead.
 func (*CreatePostRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_proto_blog_proto_rawDescGZIP(), []int{4}
+	return file_pkg_proto_blog_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *CreatePostRequest) GetTitle() string {
@@ -370,7 +438,7 @@ type CreatePostResponse struct {
 
 func (x *CreatePostResponse) Reset() {
 	*x = CreatePostResponse{}
-	mi := &file_pkg_proto_blog_proto_msgTypes[5]
+	mi := &file_pkg_proto_blog_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -382,7 +450,7 @@ func (x *CreatePostResponse) String() string {
 func (*CreatePostResponse) ProtoMessage() {}
 
 func (x *CreatePostResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_proto_blog_proto_msgTypes[5]
+	mi := &file_pkg_proto_blog_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -395,7 +463,7 @@ func (x *CreatePostResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreatePostResponse.ProtoReflect.Descriptor instead.
 func (*CreatePostResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_proto_blog_proto_rawDescGZIP(), []int{5}
+	return file_pkg_proto_blog_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *CreatePostResponse) GetPost() *Post {
@@ -414,7 +482,7 @@ type GetUserRequest struct {
 
 func (x *GetUserRequest) Reset() {
 	*x = GetUserRequest{}
-	mi := &file_pkg_proto_blog_proto_msgTypes[6]
+	mi := &file_pkg_proto_blog_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -426,7 +494,7 @@ func (x *GetUserRequest) String() string {
 func (*GetUserRequest) ProtoMessage() {}
 
 func (x *GetUserRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_proto_blog_proto_msgTypes[6]
+	mi := &file_pkg_proto_blog_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -439,7 +507,7 @@ func (x *GetUserRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetUserRequest.ProtoReflect.Descriptor instead.
 func (*GetUserRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_proto_blog_proto_rawDescGZIP(), []int{6}
+	return file_pkg_proto_blog_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *GetUserRequest) GetId() string {
@@ -458,7 +526,7 @@ type GetUserResponse struct {
 
 func (x *GetUserResponse) Reset() {
 	*x = GetUserResponse{}
-	mi := &file_pkg_proto_blog_proto_msgTypes[7]
+	mi := &file_pkg_proto_blog_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -470,7 +538,7 @@ func (x *GetUserResponse) String() string {
 func (*GetUserResponse) ProtoMessage() {}
 
 func (x *GetUserResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_proto_blog_proto_msgTypes[7]
+	mi := &file_pkg_proto_blog_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -483,7 +551,7 @@ func (x *GetUserResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetUserResponse.ProtoReflect.Descriptor instead.
 func (*GetUserResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_proto_blog_proto_rawDescGZIP(), []int{7}
+	return file_pkg_proto_blog_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *GetUserResponse) GetUser() *User {
@@ -497,14 +565,20 @@ var File_pkg_proto_blog_proto protoreflect.FileDescriptor
 
 const file_pkg_proto_blog_proto_rawDesc = "" +
 	"\n" +
-	"\x14pkg/proto/blog.proto\x12\x04blog\"\x82\x01\n" +
+	"\x14pkg/proto/blog.proto\x12\x04blog\"\xa8\x01\n" +
 	"\x04Post\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x18\n" +
 	"\acontent\x18\x03 \x01(\tR\acontent\x12\x1b\n" +
 	"\tauthor_id\x18\x04 \x01(\tR\bauthorId\x12\x1d\n" +
 	"\n" +
-	"created_at\x18\x05 \x01(\tR\tcreatedAt\"\xad\x01\n" +
+	"created_at\x18\x05 \x01(\tR\tcreatedAt\x12$\n" +
+	"\x06author\x18\x06 \x01(\v2\f.blog.AuthorR\x06author\"K\n" +
+	"\x06Author\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1d\n" +
+	"\n" +
+	"avatar_url\x18\x03 \x01(\tR\tavatarUrl\"\xad\x01\n" +
 	"\x04User\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n" +
@@ -552,32 +626,34 @@ func file_pkg_proto_blog_proto_rawDescGZIP() []byte {
 	return file_pkg_proto_blog_proto_rawDescData
 }
 
-var file_pkg_proto_blog_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_pkg_proto_blog_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_pkg_proto_blog_proto_goTypes = []any{
 	(*Post)(nil),               // 0: blog.Post
-	(*User)(nil),               // 1: blog.User
-	(*ListPostsRequest)(nil),   // 2: blog.ListPostsRequest
-	(*ListPostsResponse)(nil),  // 3: blog.ListPostsResponse
-	(*CreatePostRequest)(nil),  // 4: blog.CreatePostRequest
-	(*CreatePostResponse)(nil), // 5: blog.CreatePostResponse
-	(*GetUserRequest)(nil),     // 6: blog.GetUserRequest
-	(*GetUserResponse)(nil),    // 7: blog.GetUserResponse
+	(*Author)(nil),             // 1: blog.Author
+	(*User)(nil),               // 2: blog.User
+	(*ListPostsRequest)(nil),   // 3: blog.ListPostsRequest
+	(*ListPostsResponse)(nil),  // 4: blog.ListPostsResponse
+	(*CreatePostRequest)(nil),  // 5: blog.CreatePostRequest
+	(*CreatePostResponse)(nil), // 6: blog.CreatePostResponse
+	(*GetUserRequest)(nil),     // 7: blog.GetUserRequest
+	(*GetUserResponse)(nil),    // 8: blog.GetUserResponse
 }
 var file_pkg_proto_blog_proto_depIdxs = []int32{
-	0, // 0: blog.ListPostsResponse.posts:type_name -> blog.Post
-	0, // 1: blog.CreatePostResponse.post:type_name -> blog.Post
-	1, // 2: blog.GetUserResponse.user:type_name -> blog.User
-	2, // 3: blog.BlogService.ListPosts:input_type -> blog.ListPostsRequest
-	4, // 4: blog.BlogService.CreatePost:input_type -> blog.CreatePostRequest
-	6, // 5: blog.BlogService.GetUser:input_type -> blog.GetUserRequest
-	3, // 6: blog.BlogService.ListPosts:output_type -> blog.ListPostsResponse
-	5, // 7: blog.BlogService.CreatePost:output_type -> blog.CreatePostResponse
-	7, // 8: blog.BlogService.GetUser:output_type -> blog.GetUserResponse
-	6, // [6:9] is the sub-list for method output_type
-	3, // [3:6] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	1, // 0: blog.Post.author:type_name -> blog.Author
+	0, // 1: blog.ListPostsResponse.posts:type_name -> blog.Post
+	0, // 2: blog.CreatePostResponse.post:type_name -> blog.Post
+	2, // 3: blog.GetUserResponse.user:type_name -> blog.User
+	3, // 4: blog.BlogService.ListPosts:input_type -> blog.ListPostsRequest
+	5, // 5: blog.BlogService.CreatePost:input_type -> blog.CreatePostRequest
+	7, // 6: blog.BlogService.GetUser:input_type -> blog.GetUserRequest
+	4, // 7: blog.BlogService.ListPosts:output_type -> blog.ListPostsResponse
+	6, // 8: blog.BlogService.CreatePost:output_type -> blog.CreatePostResponse
+	8, // 9: blog.BlogService.GetUser:output_type -> blog.GetUserResponse
+	7, // [7:10] is the sub-list for method output_type
+	4, // [4:7] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_pkg_proto_blog_proto_init() }
@@ -591,7 +667,7 @@ func file_pkg_proto_blog_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_proto_blog_proto_rawDesc), len(file_pkg_proto_blog_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
