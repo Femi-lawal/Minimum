@@ -1,52 +1,89 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Post, getPostsByTag } from '@/services/api';
 import { DashboardSkeleton } from '@/components/LoadingSkeleton';
 import { PostCard } from '@/components/PostCard';
 import Link from 'next/link';
 
-export default function DashboardPage() {
+import { Suspense } from 'react';
+
+function DashboardContent() {
+    const searchParams = useSearchParams();
+    const searchQuery = searchParams.get('search') || '';
+
     const [posts, setPosts] = useState<Post[]>([]);
-    const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [searchQuery, setSearchQuery] = useState('');
     const [selectedTag, setSelectedTag] = useState<string | null>(null);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
 
-    useEffect(() => {
-        const fetchPosts = async () => {
+    // Ref for intersection observer
+    const loadMoreRef = useRef<HTMLDivElement>(null);
+
+    // Fetch posts
+    const fetchPosts = useCallback(async (pageNum: number, isInitial: boolean) => {
+        if (isInitial) {
             setLoading(true);
-            try {
-                // Use API abstraction instead of hardcoded URL
-                const fetchedPosts = await getPostsByTag(selectedTag || undefined);
-                setPosts(fetchedPosts);
-                setFilteredPosts(fetchedPosts);
-            } catch (err: any) {
-                setError(err.message);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchPosts();
-    }, [selectedTag]); // Re-fetch when tag changes
-
-    // Search filtering still on frontend for now (could move to backend too)
-    useEffect(() => {
-        let filtered = posts;
-
-        if (searchQuery) {
-            filtered = filtered.filter(post =>
-                post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                post.content.toLowerCase().includes(searchQuery.toLowerCase())
-            );
+        } else {
+            setLoadingMore(true);
         }
 
-        setFilteredPosts(filtered);
-    }, [searchQuery, posts]);
+        try {
+            const result = await getPostsByTag(
+                selectedTag || undefined,
+                searchQuery || undefined,
+                pageNum,
+                10
+            );
 
-    if (loading) {
+            if (isInitial) {
+                setPosts(result.posts);
+            } else {
+                setPosts(prev => [...prev, ...result.posts]);
+            }
+            setHasMore(result.hasMore);
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+            setLoadingMore(false);
+        }
+    }, [selectedTag, searchQuery]);
+
+    // Initial load and reset on filter change
+    useEffect(() => {
+        setPage(1);
+        setHasMore(true);
+        fetchPosts(1, true);
+    }, [selectedTag, searchQuery, fetchPosts]);
+
+    // Intersection Observer for infinite scroll
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && hasMore && !loading && !loadingMore) {
+                    setPage(prev => {
+                        const nextPage = prev + 1;
+                        fetchPosts(nextPage, false);
+                        return nextPage;
+                    });
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        if (loadMoreRef.current) {
+            observer.observe(loadMoreRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, [hasMore, loading, loadingMore, fetchPosts]);
+
+    if (loading && posts.length === 0) {
         return (
             <div className="w-full">
                 <h2 className="text-sm font-semibold tracking-wide text-gray-500 uppercase mb-6">
@@ -84,7 +121,7 @@ export default function DashboardPage() {
 
                 {/* Posts List */}
                 <div>
-                    {filteredPosts.length === 0 ? (
+                    {posts.length === 0 ? (
                         <div className="text-center py-20 bg-gray-50 rounded-lg">
                             <p className="text-gray-500 mb-4">
                                 {searchQuery ? `No posts found for "${searchQuery}"` : 'No posts yet.'}
@@ -100,13 +137,43 @@ export default function DashboardPage() {
                         </div>
                     ) : (
                         <div className="space-y-0 divide-y divide-gray-100">
-                            {filteredPosts.map((post) => (
+                            {posts.map((post: Post) => (
                                 <PostCard key={post.id} post={post} />
                             ))}
                         </div>
                     )}
                 </div>
+
+                {/* Infinite Scroll Trigger / Load More */}
+                {hasMore && posts.length > 0 && (
+                    <div
+                        ref={loadMoreRef}
+                        className="py-8 text-center"
+                    >
+                        {loadingMore ? (
+                            <div className="flex justify-center">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+                            </div>
+                        ) : (
+                            <span className="text-gray-400 text-sm">Scroll for more...</span>
+                        )}
+                    </div>
+                )}
+
+                {!hasMore && posts.length > 0 && (
+                    <div className="py-8 text-center">
+                        <span className="text-gray-400 text-sm">You've reached the end.</span>
+                    </div>
+                )}
             </div>
         </div>
+    );
+}
+
+export default function DashboardPage() {
+    return (
+        <Suspense fallback={<DashboardSkeleton />}>
+            <DashboardContent />
+        </Suspense>
     );
 }

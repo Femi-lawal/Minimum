@@ -44,8 +44,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
             className={`
         fixed top-14 left-0 h-[calc(100vh-3.5rem)] bg-white border-r border-gray-200 
         transition-all duration-300 ease-in-out z-40
-        ${isOpen ? 'w-64' : 'w-20'}
-        hidden lg:block
+        ${isOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64 lg:translate-x-0 lg:w-20'}
       `}
         >
             <nav className="flex flex-col py-8 space-y-2">

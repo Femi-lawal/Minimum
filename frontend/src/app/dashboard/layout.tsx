@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import TopNav from '@/components/TopNav';
 import Sidebar from '@/components/Sidebar';
 import RightSidebar from '@/components/RightSidebar';
@@ -33,7 +33,9 @@ export default function DashboardLayout({
                         </div>
 
                         {/* 5. Right Sidebar (Recommendations) */}
-                        <RightSidebar />
+                        <Suspense fallback={<div className="w-80 pl-8 pt-8">Loading sidebar...</div>}>
+                            <RightSidebar />
+                        </Suspense>
                     </div>
                 </main>
             </div>

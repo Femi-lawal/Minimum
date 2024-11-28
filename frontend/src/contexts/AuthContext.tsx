@@ -1,11 +1,13 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { setAuthToken } from '../services/api';
 
 interface User {
     id: string;
     email: string;
     name?: string;
+    avatar_url?: string;
 }
 
 interface AuthContextType {
@@ -25,17 +27,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
+
+
     // Load from localStorage on mount
     useEffect(() => {
         const storedToken = localStorage.getItem('token');
         const storedUser = localStorage.getItem('user');
 
         if (storedToken && storedUser) {
-            setToken(storedToken);
-            setUser(JSON.parse(storedUser));
+            if (isTokenExpired(storedToken)) {
+                console.warn('Token expired, clearing storage');
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                setAuthToken(null);
+            } else {
+                setAuthToken(storedToken); // Set immediately
+                setToken(storedToken);
+                setUser(JSON.parse(storedUser));
+            }
         }
         setIsLoading(false);
     }, []);
+
+    const isTokenExpired = (token: string): boolean => {
+        try {
+            const payloadBase64 = token.split('.')[1];
+            if (!payloadBase64) return true;
+            const decodedJson = JSON.parse(atob(payloadBase64));
+            const exp = decodedJson.exp;
+            if (!exp) return true;
+            // Date.now() is in ms, exp is in seconds
+            return (Date.now() >= exp * 1000);
+        } catch (e) {
+            return true;
+        }
+    };
 
     const login = async (email: string, password: string): Promise<boolean> => {
         try {
@@ -52,6 +78,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             const data = await res.json();
             const { token: newToken, user: userData } = data.data;
+
+            // Update API header
+            setAuthToken(newToken);
 
             // Store in state
             setToken(newToken);
@@ -73,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const logout = () => {
+        setAuthToken(null);
         setToken(null);
         setUser(null);
         localStorage.removeItem('token');

@@ -1,6 +1,24 @@
+'use client';
+
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
 
 export default function RightSidebar() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const [search, setSearch] = useState('');
+
+    useEffect(() => {
+        setSearch(searchParams?.get('search') || '');
+    }, [searchParams]);
+
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        router.push(`/dashboard?search=${encodeURIComponent(search)}`);
+        // Optional: Close keyboard on mobile?
+    };
+
     const topics = [
         'Programming', 'Technology', 'Design',
         'Productivity', 'Writing', 'Self Improvement'
@@ -11,16 +29,20 @@ export default function RightSidebar() {
             <div className="sticky top-20">
 
                 {/* Search */}
-                <div className="relative mb-10">
+                <form onSubmit={handleSearch} className="relative mb-10">
                     <input
                         type="text"
                         placeholder="Search"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
                         className="w-full py-2 pl-10 pr-4 bg-gray-50 border border-transparent rounded-full text-sm focus:border-gray-200 focus:bg-white focus:ring-0 transition-colors"
                     />
-                    <svg className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                </div>
+                    <button type="submit" className="absolute left-3 top-2.5 w-4 h-4 text-gray-400">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </button>
+                </form>
 
                 {/* Recommended Topics */}
                 <div className="mb-10">

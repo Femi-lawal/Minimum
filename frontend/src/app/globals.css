@@ -3,6 +3,19 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --card-bg: #ffffff;
+  --card-border: #f3f4f6;
+  --muted: #6b7280;
+  --accent: #16a34a;
+}
+
+.dark {
+  --background: #0f0f0f;
+  --foreground: #ededed;
+  --card-bg: #1a1a1a;
+  --card-border: #2a2a2a;
+  --muted: #9ca3af;
+  --accent: #22c55e;
 }
 
 @theme inline {
@@ -12,19 +25,96 @@
   --font-serif: var(--font-merriweather);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-inter), sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-merriweather), serif;
+}
+
+/* Dark mode overrides for common elements */
+.dark .bg-white {
+  background-color: var(--card-bg) !important;
+}
+
+.dark .bg-gray-50 {
+  background-color: #1f1f1f !important;
+}
+
+.dark .bg-gray-100 {
+  background-color: #252525 !important;
+}
+
+.dark .border-gray-100,
+.dark .border-gray-200 {
+  border-color: var(--card-border) !important;
+}
+
+.dark .text-gray-900 {
+  color: var(--foreground) !important;
+}
+
+.dark .text-gray-700,
+.dark .text-gray-600,
+.dark .text-gray-500 {
+  color: var(--muted) !important;
+}
+
+.dark .hover\:bg-gray-50:hover {
+  background-color: #252525 !important;
+}
+
+.dark .hover\:bg-gray-100:hover {
+  background-color: #2a2a2a !important;
+}
+
+/* Input fields in dark mode */
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: var(--card-bg);
+  border-color: var(--card-border);
+  color: var(--foreground);
+}
+
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  border-color: var(--accent);
+}
+
+/* Cards and panels */
+.dark .shadow-sm,
+.dark .shadow-md,
+.dark .shadow-lg {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.4);
+}
+
+/* Links */
+.dark a.text-green-600,
+.dark .text-green-600 {
+  color: var(--accent) !important;
+}
+
+/* Buttons */
+.dark .bg-black {
+  background-color: #ededed !important;
+  color: #0f0f0f !important;
+}
+
+.dark .bg-green-600 {
+  background-color: var(--accent) !important;
+}
+
+/* Header sticky background */
+.dark .bg-white\/80 {
+  background-color: rgba(15, 15, 15, 0.8) !important;
+}
+
+.dark .backdrop-blur-sm {
+  backdrop-filter: blur(8px);
 }

@@ -3,46 +3,31 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-
-interface User {
-    id: string;
-    name: string;
-    email: string;
-    bio: string;
-    avatar_url: string;
-    followers: number;
-    following: number;
-}
-
-interface Post {
-    id: string;
-    title: string;
-    content: string;
-    author_id: string;
-    created_at: string;
-}
+import { getUser, getPosts, toggleFollow, User, Post } from '@/services/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function UserProfilePage() {
     const params = useParams();
+    const { token } = useAuth();
     const [user, setUser] = useState<User | null>(null);
     const [posts, setPosts] = useState<Post[]>([]);
     const [loading, setLoading] = useState(true);
     const [isFollowing, setIsFollowing] = useState(false);
+    const [isUpdatingFollow, setIsUpdatingFollow] = useState(false);
 
     useEffect(() => {
         const fetchUserData = async () => {
             try {
+                const userId = params.id as string;
                 // Fetch user from API
-                const userResponse = await fetch(`http://127.0.0.1:8080/api/v1/users/${params.id}`);
-                const userData = await userResponse.json();
-                if (userData.data) {
-                    setUser(userData.data);
-                }
+                const userData = await getUser(userId);
+                setUser(userData);
+                setIsFollowing(userData.is_following || false);
 
                 // Fetch user's posts
-                const postsResponse = await fetch('http://127.0.0.1:8080/api/v1/posts');
-                const postsData = await postsResponse.json();
-                const userPosts = postsData.data?.filter((p: Post) => p.author_id === params.id) || [];
+                // Efficiently, we should have getPostsByAuthor endpoint, but filtering all works for MVP
+                const allPosts = await getPosts();
+                const userPosts = allPosts.filter((p: Post) => p.author_id === userId);
                 setPosts(userPosts);
             } catch (err) {
                 console.error('Error fetching user:', err);
@@ -51,12 +36,38 @@ export default function UserProfilePage() {
             }
         };
 
-        fetchUserData();
+        if (params.id) {
+            fetchUserData();
+        }
     }, [params.id]);
 
     const handleFollow = async () => {
+        if (!token) {
+            alert("Please log in to follow authors.");
+            return;
+        }
+        if (isUpdatingFollow || !user) return;
+
+        setIsUpdatingFollow(true);
+        // Optimistic toggle
         setIsFollowing(!isFollowing);
-        // TODO: Call API to persist follow
+
+        try {
+            const result = await toggleFollow(user.id);
+            setIsFollowing(result.following);
+
+            // Update follower count locally
+            setUser(prev => prev ? {
+                ...prev,
+                followers: result.following ? prev.followers + 1 : prev.followers - 1
+            } : null);
+
+        } catch (err) {
+            console.error("Failed to follow/unfollow", err);
+            setIsFollowing(!isFollowing); // Revert
+        } finally {
+            setIsUpdatingFollow(false);
+        }
     };
 
     if (loading) {
