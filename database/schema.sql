@@ -87,6 +87,18 @@ CREATE TABLE IF NOT EXISTS interactions (
 
 CREATE INDEX idx_interactions_post ON interactions(post_id);
 CREATE INDEX idx_interactions_user ON interactions(user_id);
+
+-- Comments
+CREATE TABLE IF NOT EXISTS comments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_comments_post_id ON comments(post_id);
+
 CREATE INDEX idx_interactions_type ON interactions(type);
 
 -- ============================================================================
