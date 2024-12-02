@@ -1,14 +1,9 @@
 import { test, expect } from '@playwright/test';
-
-const BASE_URL = 'http://localhost:3000';
+import { BASE_URL, TEST_USER, loginTestUser } from './fixtures';
 
 test.describe('Search and Filter Tests', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${BASE_URL}/login`);
-    await page.fill('input[type="email"]', 'test@example.com');
-    await page.fill('input[type="password"]', 'password');
-    await page.click('button[type="submit"]');
-    await page.waitForURL('/dashboard');
+    await loginTestUser(page);
   });
 
   test.describe('Search Functionality', () => {
@@ -71,11 +66,7 @@ test.describe('Search and Filter Tests', () => {
 
 test.describe('Navigation Tests', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${BASE_URL}/login`);
-    await page.fill('input[type="email"]', 'test@example.com');
-    await page.fill('input[type="password"]', 'password');
-    await page.click('button[type="submit"]');
-    await page.waitForURL('/dashboard');
+    await loginTestUser(page);
   });
 
   test('should navigate via logo', async ({ page }) => {
@@ -85,7 +76,7 @@ test.describe('Navigation Tests', () => {
   });
 
   test('should navigate via browser back button', async ({ page }) => {
-    await page.locator('article h3').first().click();
+    await page.locator('article h2').first().click();
     await page.waitForURL(/\/post\//);
     
     await page.goBack();
@@ -103,8 +94,8 @@ test.describe('Responsive Design Tests', () => {
     await page.setViewportSize({ width: 375, height: 667 });
     
     await page.goto(`${BASE_URL}/login`);
-    await page.fill('input[type="email"]', 'test@example.com');
-    await page.fill('input[type="password"]', 'password');
+    await page.fill('input[type="email"]', TEST_USER.email);
+    await page.fill('input[type="password"]', TEST_USER.password);
     await page.click('button[type="submit"]');
     await page.waitForURL('/dashboard');
     
@@ -115,8 +106,8 @@ test.describe('Responsive Design Tests', () => {
     await page.setViewportSize({ width: 768, height: 1024 });
     
     await page.goto(`${BASE_URL}/login`);
-    await page.fill('input[type="email"]', 'test@example.com');
-    await page.fill('input[type="password"]', 'password');
+    await page.fill('input[type="email"]', TEST_USER.email);
+    await page.fill('input[type="password"]', TEST_USER.password);
     await page.click('button[type="submit"]');
     await page.waitForURL('/dashboard');
     
@@ -127,8 +118,8 @@ test.describe('Responsive Design Tests', () => {
     await page.setViewportSize({ width: 375, height: 667 });
     
     await page.goto(`${BASE_URL}/login`);
-    await page.fill('input[type="email"]', 'test@example.com');
-    await page.fill('input[type="password"]', 'password');
+    await page.fill('input[type="email"]', TEST_USER.email);
+    await page.fill('input[type="password"]', TEST_USER.password);
     await page.click('button[type="submit"]');
     await page.waitForURL('/dashboard');
     

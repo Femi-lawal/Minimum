@@ -1,20 +1,15 @@
 import { test, expect } from '@playwright/test';
-
-const BASE_URL = 'http://localhost:3000';
+import { BASE_URL, TEST_USER, loginTestUser } from './fixtures';
 
 test.describe('Post Interactions', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${BASE_URL}/login`);
-    await page.fill('input[type="email"]', 'test@example.com');
-    await page.fill('input[type="password"]', 'password');
-    await page.click('button[type="submit"]');
-    await page.waitForURL('/dashboard');
+    await loginTestUser(page);
   });
 
   test.describe('Post Cards', () => {
     test('should display post title and excerpt', async ({ page }) => {
       const firstPost = page.locator('article').first();
-      await expect(firstPost.locator('h3')).toBeVisible();
+      await expect(firstPost.locator('h2')).toBeVisible();
       await expect(firstPost.locator('p')).toBeVisible();
     });
 
@@ -28,14 +23,14 @@ test.describe('Post Interactions', () => {
     });
 
     test('should navigate to post detail on click', async ({ page }) => {
-      await page.locator('article h3').first().click();
+      await page.locator('article h2').first().click();
       await expect(page).toHaveURL(/\/post\//);
     });
   });
 
   test.describe('Post Detail Page', () => {
     test('should display full post content', async ({ page }) => {
-      await page.locator('article h3').first().click();
+      await page.locator('article h2').first().click();
       await page.waitForTimeout(2000);
       
       // Post detail page should show content
@@ -43,7 +38,7 @@ test.describe('Post Interactions', () => {
     });
 
     test('should display clap button', async ({ page }) => {
-      await page.locator('article h3').first().click();
+      await page.locator('article h2').first().click();
       await page.waitForTimeout(2000);
       
       // Look for clap button or any button
@@ -51,7 +46,7 @@ test.describe('Post Interactions', () => {
     });
 
     test('should increment clap count on click', async ({ page }) => {
-      await page.locator('article h3').first().click();
+      await page.locator('article h2').first().click();
       await page.waitForTimeout(1000);
       
       const clapButton = page.locator('button:has-text("👏")').first();
@@ -63,7 +58,7 @@ test.describe('Post Interactions', () => {
     });
 
     test('should display share button', async ({ page }) => {
-      await page.locator('article h3').first().click();
+      await page.locator('article h2').first().click();
       await page.waitForTimeout(2000);
       
       // Any button should be visible
@@ -71,7 +66,7 @@ test.describe('Post Interactions', () => {
     });
 
     test('should show share dropdown on click', async ({ page }) => {
-      await page.locator('article h3').first().click();
+      await page.locator('article h2').first().click();
       await page.waitForTimeout(1000);
       
       const shareButton = page.locator('button:has-text("Share")').first();
@@ -82,7 +77,7 @@ test.describe('Post Interactions', () => {
     });
 
     test('should display author card', async ({ page }) => {
-      await page.locator('article h3').first().click();
+      await page.locator('article h2').first().click();
       await page.waitForTimeout(2000);
       
       // Post detail page should be visible

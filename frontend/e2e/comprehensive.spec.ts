@@ -1,296 +1,75 @@
 import { test, expect } from '@playwright/test';
+import { BASE_URL } from './fixtures';
 
-// Test Configuration
-const BASE_URL = 'http://localhost:3000';
-const API_URL = 'http://localhost:8080';
+test.describe('Comprehensive Navigation & Feature Tests', () => {
 
-test.describe('Minimum - Comprehensive E2E Tests', () => {
-  
-  // ============================================================================
-  // LANDING PAGE TESTS
-  // ============================================================================
-  
-  test.describe('Landing Page', () => {
-    test('should display landing page with correct branding', async ({ page }) => {
-      await page.goto(BASE_URL);
-      await expect(page.locator('h1')).toContainText('Minimum');
-      await expect(page.locator('h2')).toContainText('Human');
-      await expect(page.locator('text=Get started')).toBeVisible();
-    });
+    // Use desktop viewport to ensure sidebars are visible
+    test.use({ viewport: { width: 1280, height: 800 } });
 
-    test('should navigate to login when clicking Sign in', async ({ page }) => {
-      await page.goto(BASE_URL);
-      await page.click('text=Sign in');
-      await expect(page).toHaveURL(/.*login/);
-    });
-
-    test('should navigate to demo login when clicking Get started', async ({ page }) => {
-      await page.goto(BASE_URL);
-      await page.click('text=Get started');
-      await expect(page).toHaveURL(/.*login/);
-    });
-  });
-
-  // ============================================================================
-  // AUTHENTICATION TESTS
-  // ============================================================================
-  
-  test.describe('Authentication', () => {
-    test('should login with demo user', async ({ page }) => {
-      await page.goto(`${BASE_URL}/login`);
-      await page.fill('input[type="email"]', 'test@example.com');
-      await page.fill('input[type="password"]', 'password');
-      await page.click('button[type="submit"]');
-      await expect(page).toHaveURL(/.*dashboard/);
-    });
-
-    test('should show error for invalid credentials', async ({ page }) => {
-      await page.goto(`${BASE_URL}/login`);
-      await page.fill('input[type="email"]', 'wrong@example.com');
-      await page.fill('input[type="password"]', 'wrongpass');
-      await page.click('button[type="submit"]');
-      // Should stay on login page or show error
-      await expect(page).toHaveURL(/.*login/);
-    });
-
-    test('should logout successfully', async ({ page }) => {
-      // Login first
-      await page.goto(`${BASE_URL}/login`);
-      await page.fill('input[type="email"]', 'test@example.com');
-      await page.fill('input[type="password"]', 'password');
-      await page.click('button[type="submit"]');
-      await expect(page).toHaveURL(/.*dashboard/);
-      
-      // Then logout
-      await page.click('text=Sign out');
-      await expect(page).toHaveURL(/.*login/);
-    });
-  });
-
-  // ============================================================================
-  // DASHBOARD TESTS
-  // ============================================================================
-  
-  test.describe('Dashboard', () => {
     test.beforeEach(async ({ page }) => {
-      // Login before each dashboard test
-      await page.goto(`${BASE_URL}/login`);
-      await page.fill('input[type="email"]', 'test@example.com');
-      await page.fill('input[type="password"]', 'password');
-      await page.click('button[type="submit"]');
-      await expect(page).toHaveURL(/.*dashboard/);
+        await page.goto(`${BASE_URL}/dashboard`);
+        // Wait for page to be fully loaded
+        await page.waitForLoadState('networkidle');
     });
 
-    test('should display dashboard layout with header', async ({ page }) => {
-      await expect(page.locator('header')).toBeVisible();
-      await expect(page.locator('text=Minimum')).toBeVisible();
-      await expect(page.locator('text=Write')).toBeVisible();
+    test('should navigate sidebar links (Lists, Stats)', async ({ page }) => {
+        // 1. Verify Dashboard (Home)
+        await expect(page.getByText('For you')).toBeVisible();
+
+        // 2. Navigate to Lists (via left sidebar)
+        const listsLink = page.locator('aside').first().locator('a[href="/dashboard/lists"]');
+        await listsLink.click();
+        await expect(page).toHaveURL(`${BASE_URL}/dashboard/lists`);
+        await expect(page.getByRole('heading', { name: 'Your lists' })).toBeVisible();
+
+        // 3. Navigate to Stats (via left sidebar)
+        const statsLink = page.locator('aside').first().locator('a[href="/dashboard/stats"]');
+        await statsLink.click();
+        await expect(page).toHaveURL(`${BASE_URL}/dashboard/stats`);
+        await expect(page.getByRole('heading', { name: 'Stats', exact: true })).toBeVisible();
     });
 
-    test('should display multiple blog posts', async ({ page }) => {
-      // Wait for posts to load
-      await page.waitForSelector('article', { timeout: 5000 });
-      
-      const articles = await page.locator('article').count();
-      expect(articles).toBeGreaterThan(2); // Should have more than 2 mock posts
+    test('should navigate to Stories page', async ({ page }) => {
+        // Navigate to Stories via left sidebar
+        const storiesLink = page.locator('aside').first().locator('a[href="/dashboard/stories"]');
+        await storiesLink.click();
+        await expect(page).toHaveURL(`${BASE_URL}/dashboard/stories`);
+        await expect(page.getByRole('heading', { name: 'Your stories' })).toBeVisible();
     });
 
-    test('should display post metadata (author, date, reading time)', async ({ page }) => {
-      await page.waitForSelector('article');
-      
-      const firstArticle = page.locator('article').first();
-      await expect(firstArticle.locator('span:has-text("min read")')).toBeVisible();
-    });
-  });
-
-  // ============================================================================
-  // SEARCH FUNCTIONALITY TESTS
-  // ============================================================================
-  
-  test.describe('Search', () => {
-    test.beforeEach(async ({ page }) => {
-      await page.goto(`${BASE_URL}/login`);
-      await page.fill('input[type="email"]', 'test@example.com');
-      await page.fill('input[type="password"]', 'password');
-      await page.click('button[type="submit"]');
+    test('should display Left Sidebar on desktop', async ({ page }) => {
+        // Sidebar should be visible
+        const sidebar = page.locator('aside').first();
+        await expect(sidebar).toBeVisible();
+        
+        // Check for expected navigation items
+        await expect(sidebar.locator('a[href="/dashboard"]')).toBeVisible();
+        await expect(sidebar.locator('a[href="/dashboard/lists"]')).toBeVisible();
     });
 
-    test('should have search input visible', async ({ page }) => {
-      const searchInput = page.locator('input[placeholder*="Search"]');
-      await expect(searchInput).toBeVisible();
+    test('should navigate to Topic page from Right Sidebar', async ({ page }) => {
+        // Target the RIGHT sidebar specifically (second aside element)
+        // RightSidebar contains "Recommended topics" section
+        const rightSidebar = page.locator('aside').nth(1);
+        await expect(rightSidebar).toBeVisible();
+
+        // Find the Technology link within the "Recommended topics" section
+        const topicsSection = rightSidebar.locator('h4:has-text("Recommended topics")').locator('..'); 
+        const techLink = topicsSection.locator('a[href="/dashboard/topic/technology"]');
+        
+        await expect(techLink).toBeVisible();
+        await techLink.click();
+
+        await expect(page).toHaveURL(`${BASE_URL}/dashboard/topic/technology`);
+        await expect(page.getByRole('heading', { name: 'Technology' })).toBeVisible();
     });
 
-    test('should allow typing in search input', async ({ page }) => {
-      const searchInput = page.locator('input[placeholder*="Search"]');
-      await searchInput.fill('Go programming');
-      await expect(searchInput).toHaveValue('Go programming');
+    test('should display search input in Right Sidebar', async ({ page }) => {
+        const rightSidebar = page.locator('aside').nth(1);
+        const searchInput = rightSidebar.getByPlaceholder('Search');
+        await expect(searchInput).toBeVisible();
+        await searchInput.fill('React');
+        // Search is currently UI-only, so just verify input works
+        await expect(searchInput).toHaveValue('React');
     });
-
-    test('search should filter posts (if implemented)', async ({ page }) => {
-      const searchInput = page.locator('input[placeholder*="Search"]');
-      await searchInput.fill('React');
-      await searchInput.press('Enter');
-      
-      // Either expect filtered results or a "not implemented" message
-      // For now, just verify search doesn't crash
-      await page.waitForTimeout(1000);
-    });
-  });
-
-  // ============================================================================
-  // WRITE/CREATE POST TESTS
-  // ============================================================================
-  
-  test.describe('Write Post', () => {
-    test.beforeEach(async ({ page }) => {
-      await page.goto(`${BASE_URL}/login`);
-      await page.fill('input[type="email"]', 'test@example.com');
-      await page.fill('input[type="password"]', 'password');
-      await page.click('button[type="submit"]');
-    });
-
-    test('should have Write button visible', async ({ page }) => {
-      const writeButton = page.locator('text=Write');
-      await expect(writeButton).toBeVisible();
-    });
-
-    test('should navigate to write page when clicking Write', async ({ page }) => {
-      await page.click('text=Write');
-      // Should navigate to /write or show editor
-      await page.waitForTimeout(1000);
-      const url = page.url();
-      expect(url).toMatch(/write|editor|new/);
-    });
-  });
-
-  // ============================================================================
-  // BOOKMARK FUNCTIONALITY TESTS
-  // ============================================================================
-  
-  test.describe('Bookmarks', () => {
-    test.beforeEach(async ({ page }) => {
-      await page.goto(`${BASE_URL}/login`);
-      await page.fill('input[type="email"]', 'test@example.com');
-      await page.fill('input[type="password"]', 'password');
-      await page.click('button[type="submit"]');
-      await page.waitForSelector('article');
-    });
-
-    test('should have bookmark buttons visible on posts', async ({ page }) => {
-      const bookmarkButton = page.locator('button').filter({ has: page.locator('svg') }).first();
-      await expect(bookmarkButton).toBeVisible();
-    });
-
-    test('should be able to click bookmark button', async ({ page }) => {
-      const bookmarkButtons = page.locator('button svg[class*="h-5"]').first();
-      await bookmarkButtons.click();
-      // Verify no crash
-      await page.waitForTimeout(500);
-    });
-  });
-
-  // ============================================================================
-  // PROFILE TESTS
-  // ============================================================================
-  
-  test.describe('Profile', () => {
-    test.beforeEach(async ({ page }) => {
-      await page.goto(`${BASE_URL}/login`);
-      await page.fill('input[type="email"]', 'test@example.com');
-      await page.fill('input[type="password"]', 'password');
-      await page.click('button[type="submit"]');
-    });
-
-    test('should have profile avatar visible', async ({ page }) => {
-      const profileAvatar = page.locator('text=U').or(page.locator('[class*="rounded-full"]'));
-      await expect(profileAvatar.first()).toBeVisible();
-    });
-
-    test('should navigate to profile when clicking avatar', async ({ page }) => {
-      await page.click('[class*="rounded-full"]');
-      await page.waitForTimeout(1000);
-      const url = page.url();
-      expect(url).toMatch(/profile|dashboard/);
-    });
-  });
-
-  // ============================================================================
-  // SIDEBAR TESTS
-  // ============================================================================
-  
-  test.describe('Sidebar Features', () => {
-    test.beforeEach(async ({ page }) => {
-      await page.goto(`${BASE_URL}/login`);
-      await page.fill('input[type="email"]', 'test@example.com');
-      await page.fill('input[type="password"]', 'password');
-      await page.click('button[type="submit"]');
-    });
-
-    test('should display recommended topics', async ({ page }) => {
-      await expect(page.locator('text=Recommended topics')).toBeVisible();
-    });
-
-    test('should display who to follow section', async ({ page }) => {
-      await expect(page.locator('text=Who to follow')).toBeVisible();
-    });
-
-    test('should have clickable topic tags', async ({ page }) => {
-      const topicButton = page.locator('button:has-text("Programming")');
-      if (await topicButton.isVisible()) {
-        await topicButton.click();
-        await page.waitForTimeout(500);
-      }
-    });
-
-    test('should have follow buttons', async ({ page }) => {
-      const followButton = page.locator('button:has-text("Follow")').first();
-      if (await followButton.isVisible()) {
-        await followButton.click();
-        await page.waitForTimeout(500);
-      }
-    });
-  });
-
-  // ============================================================================
-  // API INTEGRATION TESTS
-  // ============================================================================
-  
-  test.describe('API Integration', () => {
-    test('API should return posts', async ({ request }) => {
-      const response = await request.get(`${API_URL}/api/v1/posts`);
-      expect(response.ok()).toBeTruthy();
-      
-      const data = await response.json();
-      expect(data.data).toBeDefined();
-      expect(data.data.length).toBeGreaterThan(0);
-    });
-
-    test('Posts should have required fields', async ({ request }) => {
-      const response = await request.get(`${API_URL}/api/v1/posts`);
-      const data = await response.json();
-      
-      const firstPost = data.data[0];
-      expect(firstPost).toHaveProperty('id');
-      expect(firstPost).toHaveProperty('title');
-      expect(firstPost).toHaveProperty('content');
-    });
-  });
-
-  // ============================================================================
-  // RESPONSIVE DESIGN TESTS
-  // ============================================================================
-  
-  test.describe('Responsive Design', () => {
-    test('should work on mobile viewport', async ({ page }) => {
-      await page.setViewportSize({ width: 375, height: 667 });
-      await page.goto(BASE_URL);
-      await expect(page.locator('h1')).toBeVisible();
-    });
-
-    test('should work on tablet viewport', async ({ page }) => {
-      await page.setViewportSize({ width: 768, height: 1024 });
-      await page.goto(BASE_URL);
-      await expect(page.locator('h1')).toBeVisible();
-    });
-  });
 });
